@@ -1,5 +1,7 @@
 package com.amy.inertia.widget;
 
+import android.os.Handler;
+import android.os.Message;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -28,9 +30,48 @@ final class TouchHelper {
         registerOnScrollChangedListener();
     }
 
+    void onIsTouchingChanged() {
+        if (!mView.isInTouching()) {
+            final long l = mScrollChecker.lastScrollTime;
+            mScrollChecker.checkIsStopScroll(l);
+        }
+    }
+
+    private final ScrollChecker mScrollChecker = new ScrollChecker();
+
+    private final class ScrollChecker {
+        //Check if is scrolling.
+        private long lastScrollTime = 0;
+        private static final int CHECK_SCROLL_STOP_DELAY_MILLS = 75;// human eyes can receive this fps = 30
+        private static final int MSG_SCROLL = 1;
+
+        boolean isInTouching;
+
+        Handler mHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                if (msg.what == MSG_SCROLL) {
+                    boolean notify = !(isInOverFling() || isInOverScroll());
+                    if (notify) {
+                        notifyTouchModeChanged(IDLE);
+                    }
+                }
+            }
+        };
+
+        private void checkIsStopScroll(long l) {
+            mHandler.removeMessages(MSG_SCROLL);
+            Message msg = new Message();
+            msg.what = MSG_SCROLL;
+            msg.obj = l;
+            //mHandler.sendEmptyMessageDelayed(MSG_SCROLL, CHECK_SCROLL_STOP_DELAY_MILLS);
+            mHandler.sendMessageDelayed(msg, CHECK_SCROLL_STOP_DELAY_MILLS);
+        }
+
+    }
+
     //--------------------------ScrollChangedListener--------------------------
     private final ViewTreeObserver.OnScrollChangedListener mOnScrollChangedListener = new ViewTreeObserver.OnScrollChangedListener() {
-        boolean isInTouching;
 
         private void scrollPositionDetect() {
             final View v = mView.getView();
@@ -43,12 +84,13 @@ final class TouchHelper {
          * This will be called when the first time view was displayed in window.
          * So set a state as UNUSED.
          */
+
         @Override
         public void onScrollChanged() {
             //Detect position you scroll.
             scrollPositionDetect();
             //use is inTouching or not to determine the touch mode.
-            isInTouching = mView.isInTouching();
+            final boolean isInTouching = mScrollChecker.isInTouching = mView.isInTouching();
             if (isScrollToTop) {
                 if (isInTouching) {
                     notifyTouchModeChanged(OVER_SCROLL_HEADER);
@@ -67,6 +109,11 @@ final class TouchHelper {
                 } else {
                     notifyTouchModeChanged(SETTLING_IN_CONTENT);
                 }
+            }
+            if (!isInTouching) {
+                mScrollChecker.lastScrollTime = System.currentTimeMillis();
+                final long l = mScrollChecker.lastScrollTime;
+                mScrollChecker.checkIsStopScroll(l);
             }
         }
 
@@ -150,7 +197,7 @@ final class TouchHelper {
 
     boolean notifyTouchModeChanged(int newTouchMode) {
         LogUtil.w("newTouchMode : " + TOUCH_MODES[newTouchMode]);
-        LogUtil.printTraceStack("");
+        //LogUtil.printTraceStack("");
         //First time .
         if (CurrentTouchMode == UNUSED) {
             setTouchMode(IDLE);
@@ -168,10 +215,12 @@ final class TouchHelper {
         } else if (CurrentTouchMode != newTouchMode) {
             setTouchMode(newTouchMode);
             //LogUtil.printTraceStack("where");
-/*            LogUtil.e("----------------");
+            /*
+            LogUtil.e("----------------");
             LogUtil.d("CurrentTouchMode : " + TOUCH_MODES[CurrentTouchMode]);
             LogUtil.i("LastTouchMode: " + TOUCH_MODES[LastTouchMode]);
-            LogUtil.e("----------------");*/
+            LogUtil.e("----------------");
+            */
             for (OnTouchModeChangeListener onTouchModeChangeListener : mOnTouchModeChangeListeners) {
                 onTouchModeChangeListener.onTouchModeChanged(newTouchMode);
             }

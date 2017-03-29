@@ -13,7 +13,7 @@ import com.amy.inertia.util.LogUtil;
 import static com.amy.inertia.widget.TouchHelper.IDLE;
 import static com.amy.inertia.widget.TouchHelper.OVER_FLING_FOOTER;
 import static com.amy.inertia.widget.TouchHelper.OVER_FLING_HEADER;
-import static com.amy.inertia.widget.TouchHelper.TOUCH_MODES;
+import static com.amy.inertia.widget.TouchHelper.SETTLING_IN_CONTENT;
 
 public class ARecyclerView extends RecyclerView implements
         _IBaseAView {
@@ -124,9 +124,9 @@ public class ARecyclerView extends RecyclerView implements
 
         //LogUtil.d("scroller controller compute result : " + computeResult + " isInOverFling : " + isInOverFling);
 
-        LogUtil.d("state : " + AScrollerController.ScrollStates[mScrollerController.ScrollState]
-                + " computeResult : " + computeResult
-                + " isInOverFling : " + isInOverFling);
+//        LogUtil.d("state : " + AScrollerController.ScrollStates[mScrollerController.ScrollState]
+//                + " computeResult : " + computeResult
+//                + " isInOverFling : " + isInOverFling);
         if (computeResult && isInOverFling) {
             if (mScrollerController.ScrollState == AScrollerController.SPRING_BACK) {
                 final int currY = mScrollerController.getCurrY();
@@ -169,22 +169,32 @@ public class ARecyclerView extends RecyclerView implements
     }
 
     private void setInTouching(MotionEvent e) {
+        boolean changed = false;
         int action = e.getActionMasked();
         switch (action) {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
+                if (isInTouching) {
+                    changed = true;
+                }
                 isInTouching = false;
                 break;
             }
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE: {
+                if (!isInTouching) {
+                    changed = true;
+                }
                 isInTouching = true;
                 break;
             }
         }
+        if (changed) {
+            mTouchHelper.onIsTouchingChanged();
+        }
     }
 
-    //--------------------API--------------------
+    //--------------------Internal API--------------------
     @Override
     public View getView() {
         return this;
@@ -213,9 +223,9 @@ public class ARecyclerView extends RecyclerView implements
             transY = translationY;
         }
 
-        LogUtil.d("last mode : " + TOUCH_MODES[mTouchHelper.LastTouchMode]
-                + " curr mode : " + TOUCH_MODES[mTouchHelper.CurrentTouchMode]);
-        if (transY == 0 && mTouchHelper.LastTouchMode != TouchHelper.SETTLING_IN_CONTENT) {//Todo this need to be optimized.
+        //LogUtil.d("last mode : " + TOUCH_MODES[mTouchHelper.LastTouchMode]
+        //        + " curr mode : " + TOUCH_MODES[mTouchHelper.CurrentTouchMode]);
+        if (transY == 0 && mTouchHelper.LastTouchMode != SETTLING_IN_CONTENT) {//Todo this need to be optimized.
             mScrollerController.abort();
             setTranslationY(transY);
             mTouchHelper.notifyTouchModeChanged(IDLE);
@@ -247,6 +257,11 @@ public class ARecyclerView extends RecyclerView implements
     @Override
     public boolean isInTouching() {
         return isInTouching;
+    }
+
+    @Override
+    public int getViewScrollState() {
+        return getScrollState();
     }
 
 }

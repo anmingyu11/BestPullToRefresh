@@ -76,6 +76,13 @@ final class AViewTouchEventHandler {
 
     boolean handleOnInterceptTouchEvent(MotionEvent e) {
         //Todo : scrolling return true;
+        //LogUtil.d("is Finished : " + mScrollerController.isFinished());
+        //If scroller still running abort this and handle touchEvent.
+        if (!mScrollerController.isFinished()) {
+            mScrollerController.abort();
+            return true;
+        }
+
         //Todo : refreshing return false
         return mAView.processInterceptTouchEvent(e);
     }
@@ -242,12 +249,13 @@ final class AViewTouchEventHandler {
             }
             case OVER_SCROLL_FOOTER: {
                 //Todo anim back
+                //Todo anim to
                 final int transY = mAView.getViewTranslationY();
+                LogUtil.d("transY : " + transY);
                 boolean springBack = mScrollerController.springBack(0, transY, 0, 0, 0, 0);
                 mTouchHelper.notifyTouchModeChanged(OVER_FLING_FOOTER);
                 mAView.getView().invalidate();
                 LogUtil.d("spring back : " + springBack);
-                //Todo anim to
                 break;
             }
             case OVER_SCROLL_HEADER: {

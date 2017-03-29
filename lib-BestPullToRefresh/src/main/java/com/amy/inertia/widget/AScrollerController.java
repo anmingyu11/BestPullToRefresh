@@ -12,7 +12,7 @@ final class AScrollerController {
     final static int FLING = 0;
     final static int OVER_FLING = 1;
     final static int SPRING_BACK = 2;
-    final static int OVER_SCROLL = 3;
+    //final static int OVER_SCROLL = 3;
     final static String[] ScrollStates = new String[]{
             "FLING", "OVER_FLING", "SPRING_BACK", "OVER_SCROLL"
     };
@@ -33,11 +33,6 @@ final class AScrollerController {
         mTouchHelper = touchHelper;
         mAView = aView;
         mParams = params;
-
-    }
-
-    private void postAViewInvalidate() {
-        mAView.getView().postInvalidate();
     }
 
     void setScrollState(int state) {
@@ -81,15 +76,24 @@ final class AScrollerController {
         LogUtil.v("vel : " + mScroller.getCurrVelocity());
         LogUtil.v("y : " + mScroller.getCurrY());
 
-        //Give a idle state when this finished
         //boolean computeScrollOffset = mScroller.computeScrollOffset();
-        //boolean time = mScroller.getDuration() > mScroller.timePassed();
-        if (mScroller.computeScrollOffset() &&
-                mScroller.getDuration() > mScroller.timePassed()) {
+        LogUtil.e(" state : " + ScrollState);
+
+        final int state = ScrollState;
+        boolean time = mScroller.getDuration() > mScroller.timePassed();
+        boolean computeScrollResult = mScroller.computeScrollOffset();
+        LogUtil.d(" computeScrollOffset : " + computeScrollResult + " time : " + time + " isFinished : " + isFinished() + " state : " +
+                ScrollStates[state]);
+        //Todo this is not correct in fling.
+        //Give a idle state when this finished
+        if (computeScrollResult && time) {
             return true;
         } else {
             mScroller.abortAnimation();
-            mTouchHelper.notifyTouchModeChanged(IDLE);
+            if (state != FLING) {
+                mAView.setViewTranslationY(0);
+                mTouchHelper.notifyTouchModeChanged(IDLE);
+            }
             return false;
         }
     }

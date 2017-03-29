@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amy.example.R;
 import com.amy.inertia.widget.ARecyclerView;
@@ -70,7 +71,6 @@ public class RecyclerViewActivity extends AppCompatActivity {
             mStrings.add("item  " + i);
         }
 /*
-
         mPullToRefreshContainer = (PullToRefreshContainer) findViewById(R.id.container);
         final TopLoadingRefreshView headerView = new TopLoadingRefreshView(this);
         mPullToRefreshContainer.setHeaderView(headerView);
@@ -121,7 +121,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
             mTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mRecyclerView.smoothScrollBy(0, 200);
+                    Toast.makeText(RecyclerViewActivity.this, "Ohhhhhh....... yep", Toast.LENGTH_SHORT).show();
                 }
             });
         }
