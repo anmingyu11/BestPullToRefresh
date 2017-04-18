@@ -15,6 +15,7 @@ import android.widget.ImageView;
 
 import com.amy.example.R;
 import com.amy.inertia.interfaces.IHeaderView;
+import com.amy.inertia.widget.PullToRefreshContainer;
 
 public class TopLoadingRefreshView extends FrameLayout implements IHeaderView {
 
@@ -24,6 +25,11 @@ public class TopLoadingRefreshView extends FrameLayout implements IHeaderView {
     private ValueAnimator mRotateAnimation;
     private ImageView mLoadingIcon;
     private float mLoadingIconShowPosition;
+
+    public TopLoadingRefreshView(Context context, PullToRefreshContainer container) {
+        this(context, null, 0);
+        mPullToRefreshContainer = container;
+    }
 
     public TopLoadingRefreshView(Context context) {
         this(context, null, 0);
@@ -56,31 +62,39 @@ public class TopLoadingRefreshView extends FrameLayout implements IHeaderView {
 
     @Override
     public void setVisible(boolean visible) {
-        if (visible){
+        if (visible) {
             mLoadingIcon.setVisibility(VISIBLE);
         } else {
             mLoadingIcon.setVisibility(GONE);
         }
     }
 
-   /* @Override
-    public boolean isVisible() {
-        switch (mLoadingIcon.getVisibility()) {
-            case GONE: {
-                return false;
-            }
-            case VISIBLE: {
-                return true;
-            }
-            case INVISIBLE: {
-                return false;
-            }
-            default: {
-                return false;
-            }
-        }
+    private PullToRefreshContainer mPullToRefreshContainer;
+
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        mPullToRefreshContainer.updateHeader();
+
     }
-*/
+
+    /* @Override
+         public boolean isVisible() {
+             switch (mLoadingIcon.getVisibility()) {
+                 case GONE: {
+                     return false;
+                 }
+                 case VISIBLE: {
+                     return true;
+                 }
+                 case INVISIBLE: {
+                     return false;
+                 }
+                 default: {
+                     return false;
+                 }
+             }
+         }
+     */
     @Override
     public void onPulling(float fraction) {
         float baseRotation = 180f;

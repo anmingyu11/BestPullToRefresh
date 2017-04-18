@@ -14,7 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amy.example.R;
+import com.amy.example.header.TopLoadingRefreshView;
 import com.amy.inertia.widget.ARecyclerView;
+import com.amy.inertia.widget.PullToRefreshContainer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +25,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
     private ARecyclerView mRecyclerView;
 
-    //private PullToRefreshContainer mPullToRefreshContainer;
+    PullToRefreshContainer mPullToRefreshContainer;
 
     private Context mContext;
 
@@ -70,24 +72,9 @@ public class RecyclerViewActivity extends AppCompatActivity {
         for (int i = 0; i < 20; i++) {
             mStrings.add("item  " + i);
         }
-/*
         mPullToRefreshContainer = (PullToRefreshContainer) findViewById(R.id.container);
-        final TopLoadingRefreshView headerView = new TopLoadingRefreshView(this);
+        final TopLoadingRefreshView headerView = new TopLoadingRefreshView(this, mPullToRefreshContainer);
         mPullToRefreshContainer.setHeaderView(headerView);
-        mPullToRefreshContainer.addIPullListener(new PullListenerAdapter() {
-            @Override
-            public void onHeaderRefresh() {
-                super.onHeaderRefresh();
-                mPullToRefreshContainer.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPullToRefreshContainer.finishHeaderRefresh();
-                    }
-                }, 2000);
-            }
-        });
-        mPullToRefreshContainer.setScrollBackInterpolator(new ViscousInterpolator());
-*/
 
         mRecyclerView = (ARecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));

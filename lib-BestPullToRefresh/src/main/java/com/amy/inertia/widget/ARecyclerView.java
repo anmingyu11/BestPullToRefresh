@@ -7,12 +7,9 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.amy.inertia.interfaces.OnTouchModeChangeListener;
 import com.amy.inertia.util.LogUtil;
 
 import static com.amy.inertia.widget.TouchHelper.IDLE;
-import static com.amy.inertia.widget.TouchHelper.OVER_FLING_FOOTER;
-import static com.amy.inertia.widget.TouchHelper.OVER_FLING_HEADER;
 import static com.amy.inertia.widget.TouchHelper.SETTLING_IN_CONTENT;
 
 public class ARecyclerView extends RecyclerView implements
@@ -22,13 +19,19 @@ public class ARecyclerView extends RecyclerView implements
 
     private boolean isInTouching = false;
 
+    PullToRefreshContainer mPullToRefreshContainer;
+
     //Inside helpers.
-    private final AScrollerController mScrollerController;
-    private final OverScrollHelper mOverScrollHelper;
-    private final TouchHelper mTouchHelper;
-    private final AViewTouchEventHandler mTouchEventHandler;
+    AScrollerController mScrollerController;
+    OverScrollHelper mOverScrollHelper;
+    TouchHelper mTouchHelper;
+    AViewTouchEventHandler mTouchEventHandler;
+    HeaderFooterController mHeaderFooterController;
     //Public params.
-    private final AViewParams mParams;
+    AViewParams mParams;
+
+    boolean isPullingHeader;
+    boolean isPullingFooter;
 
     public ARecyclerView(Context context) {
         this(context, null, 0);
@@ -43,38 +46,6 @@ public class ARecyclerView extends RecyclerView implements
 
         mContext = context;
 
-        mParams = new AViewParams(mContext);
-        mOverScrollHelper = new OverScrollHelper(new OverScrollHelper.OverScrollListener() {
-            @Override
-            public void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
-                if (mTouchHelper.isInOverScroll()) {
-                    setViewTranslationY(scrollY);
-                } else if (mTouchHelper.isInOverFling()) {
-                    setViewTranslationY(-scrollY);
-                }
-            }
-        });
-
-        mTouchHelper = new TouchHelper(this);
-        mScrollerController = new AScrollerController(mContext, mTouchHelper, this, mParams);
-        mTouchEventHandler = new AViewTouchEventHandler(this, mScrollerController, mParams, mTouchHelper, mOverScrollHelper);
-
-        mTouchHelper.addScrollDetectorListener(new OnTouchModeChangeListener() {
-            @Override
-            public void onTouchModeChanged(int touchMode) {
-                LogUtil.d("Touch mode : " + TouchHelper.TOUCH_MODES[touchMode]);
-                switch (touchMode) {
-                    case OVER_FLING_FOOTER: {
-                        mScrollerController.notifyBottomEdgeReached();//Todo error will be
-                        break;
-                    }
-                    case OVER_FLING_HEADER: {
-                        mScrollerController.notifyTopEdgeReached();//Todo error will be
-                        break;
-                    }
-                }
-            }
-        });
     }
 
     @Override
@@ -87,6 +58,10 @@ public class ARecyclerView extends RecyclerView implements
 
         mParams.maxOverScrollDistance = overScrollDistance;
         mParams.maxOverFlingDistance = overFlingDistance;
+
+        LogUtil.d("overScrollDistance : " + overScrollDistance
+                + ("\noverFlingDistance : " + overFlingDistance));
+
     }
 
     @Override
@@ -189,15 +164,29 @@ public class ARecyclerView extends RecyclerView implements
                 break;
             }
         }
+       /*
         if (changed) {
             mTouchHelper.onIsTouchingChanged();
         }
+        */
     }
 
     //--------------------Internal API--------------------
     @Override
     public View getView() {
         return this;
+    }
+
+    @Override
+    public void attachToParent(PullToRefreshContainer container) {
+        mPullToRefreshContainer = container;
+        //Attaching params
+        mParams = container.mParams;
+        mTouchEventHandler = container.mTouchEventHandler;
+        mOverScrollHelper = container.mOverScrollHelper;
+        mScrollerController = container.mScrollerController;
+        mTouchHelper = container.mTouchHelper;
+        mHeaderFooterController = container.mHeaderFooterController;
     }
 
     @Override
@@ -211,7 +200,13 @@ public class ARecyclerView extends RecyclerView implements
     }
 
     @Override
+    public void realSetTranslationY(int transY) {
+        setTranslationY(transY);
+    }
+
+    @Override
     public void setViewTranslationY(int translationY) {
+        LogUtil.d("translationY : " + translationY);
         int transY = 0;
         if (translationY > 0 && getViewTranslationY() < 0) {
             transY = 0;
@@ -225,11 +220,26 @@ public class ARecyclerView extends RecyclerView implements
 
         //LogUtil.d("last mode : " + TOUCH_MODES[mTouchHelper.LastTouchMode]
         //        + " curr mode : " + TOUCH_MODES[mTouchHelper.CurrentTouchMode]);
+        final int finalTransY = transY;
         if (transY == 0 && mTouchHelper.LastTouchMode != SETTLING_IN_CONTENT) {//Todo this need to be optimized.
             mScrollerController.abort();
-            setTranslationY(transY);
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    setTranslationY(finalTransY);
+                }
+            });
             mTouchHelper.notifyTouchModeChanged(IDLE);
         } else {
+            pulling(finalTransY);
+        }
+    }
+
+    private void pulling(int transY) {
+        if (transY > 0) {
+            mHeaderFooterController.pullingHeader(transY);
+        } else if (transY < 0) {
+            mHeaderFooterController.pullingFooter(transY);
             setTranslationY(transY);
         }
     }
@@ -257,11 +267,6 @@ public class ARecyclerView extends RecyclerView implements
     @Override
     public boolean isInTouching() {
         return isInTouching;
-    }
-
-    @Override
-    public int getViewScrollState() {
-        return getScrollState();
     }
 
 }

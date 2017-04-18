@@ -7,11 +7,15 @@ interface _IBaseAView {
 
     View getView();
 
+    void attachToParent(PullToRefreshContainer container);
+
     boolean canViewScrollVertical();
 
     boolean canViewScrollHorizontal();
 
     void setViewTranslationY(int transY);
+
+    void realSetTranslationY(int transY);
 
     int getViewTranslationY();
 

@@ -77,22 +77,27 @@ final class AScrollerController {
         LogUtil.v("y : " + mScroller.getCurrY());
 
         //boolean computeScrollOffset = mScroller.computeScrollOffset();
-        LogUtil.e(" state : " + ScrollState);
 
         final int state = ScrollState;
         boolean time = mScroller.getDuration() > mScroller.timePassed();
         boolean computeScrollResult = mScroller.computeScrollOffset();
-        LogUtil.d(" computeScrollOffset : " + computeScrollResult + " time : " + time + " isFinished : " + isFinished() + " state : " +
-                ScrollStates[state]);
+        LogUtil.d(" computeScrollOffset : " + computeScrollResult +
+                " time : " + time +
+                " isFinished : " + isFinished() +
+                " state : " + ScrollStates[state]);
         //Todo this is not correct in fling.
         //Give a idle state when this finished
-        if (computeScrollResult && time) {
+        if (computeScrollResult) {
             return true;
         } else {
             mScroller.abortAnimation();
             if (state != FLING) {
+                //Not Fling
                 mAView.setViewTranslationY(0);
                 mTouchHelper.notifyTouchModeChanged(IDLE);
+            } else {
+                //if is fling
+                mTouchHelper.notifyTouchModeChanged(SETTLING_IN_CONTENT);
             }
             return false;
         }

@@ -3,33 +3,17 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <!--
 
-        <com.amy.inertia.inertia.InertiaPullToRefreshLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-    -->
-
-    <!--  <com.amy.inertia.view.PullToRefreshContainer
-          android:id="@+id/container"
-          android:layout_width="match_parent"
-          android:layout_height="match_parent">
-  -->
-    <com.amy.inertia.widget.ARecyclerView
-        android:id="@+id/recycler_view"
+    <com.amy.inertia.widget.PullToRefreshContainer
+        android:id="@+id/container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorAccent"/>
-    <!--
-        </com.amy.inertia.view.PullToRefreshContainer>
-    -->
+        android:layout_height="match_parent">
 
-    <!--
-        <com.amy.library.inertia.InertiaRecyclerView
+        <com.amy.inertia.widget.ARecyclerView
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/colorAccent"
-            android:overScrollMode="never"/>
-    -->
+            android:background="@color/colorAccent"/>
+    </com.amy.inertia.widget.PullToRefreshContainer>
+
 </FrameLayout>

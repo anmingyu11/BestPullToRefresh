@@ -31,10 +31,12 @@ final class TouchHelper {
     }
 
     void onIsTouchingChanged() {
+        /*
         if (!mView.isInTouching()) {
             final long l = mScrollChecker.lastScrollTime;
             mScrollChecker.checkIsStopScroll(l);
         }
+        */
     }
 
     private final ScrollChecker mScrollChecker = new ScrollChecker();
@@ -110,11 +112,13 @@ final class TouchHelper {
                     notifyTouchModeChanged(SETTLING_IN_CONTENT);
                 }
             }
+           /*
             if (!isInTouching) {
                 mScrollChecker.lastScrollTime = System.currentTimeMillis();
                 final long l = mScrollChecker.lastScrollTime;
                 mScrollChecker.checkIsStopScroll(l);
             }
+            */
         }
 
     };

@@ -216,6 +216,7 @@ final class AViewTouchEventHandler {
         if (needOverScroll) {
             final int deltaY = mTouchHelper.touchDY;
             //final int deltaY = dY;
+            LogUtil.d("deltaY : " + deltaY + " maxScroll : " + mParams.maxOverScrollDistance);
             mOverScrollHelper.overScroll(
                     mAView.canViewScrollHorizontal(), mAView.canViewScrollVertical(),
                     0, deltaY,//deltaY
