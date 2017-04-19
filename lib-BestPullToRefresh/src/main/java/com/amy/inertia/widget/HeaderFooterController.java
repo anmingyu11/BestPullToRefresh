@@ -5,11 +5,13 @@ import android.widget.FrameLayout;
 import com.amy.inertia.interfaces.IFooterView;
 import com.amy.inertia.interfaces.IHeaderView;
 import com.amy.inertia.interfaces.IPullToRefreshListener;
+import com.amy.inertia.util.LogUtil;
 
-import java.util.ArrayList;
-import java.util.List;
+import static com.amy.inertia.widget.TouchHelper.OVER_FLING_HEADER;
 
 public final class HeaderFooterController {
+    boolean isHeaderRefreshing = false;
+
     _IBaseAView mAView;
 
     AViewParams mParams;
@@ -20,20 +22,38 @@ public final class HeaderFooterController {
     IHeaderView mHeaderView;
     IFooterView mFooterView;
 
-    final List<IPullToRefreshListener> mPullToRefreshListeners = new ArrayList<>();
+    TouchHelper mTouchHelper;
+    AScrollerController mScrollerController;
 
-    HeaderFooterController(FrameLayout headerContainer, FrameLayout footerContainer,
+    PullToRefreshContainer mPullToRefreshContainer;
+
+    HeaderFooterController(PullToRefreshContainer container, FrameLayout headerContainer, FrameLayout footerContainer,
                            IHeaderView headerView, IFooterView footerView,
-                           AViewParams aViewParams, _IBaseAView aView) {
+                           AViewParams aViewParams, _IBaseAView aView,
+                           TouchHelper touchHelper, AScrollerController aScrollerController) {
         mHeaderContainer = headerContainer;
         mFooterContainer = footerContainer;
         mHeaderView = headerView;
         mFooterView = footerView;
         mParams = aViewParams;
         mAView = aView;
+
+        mPullToRefreshContainer = container;
+        mTouchHelper = touchHelper;
+        mScrollerController = aScrollerController;
     }
 
     void finishHeaderRefresh() {
+        LogUtil.d("finishHeaderRefresh");
+        isHeaderRefreshing = false;
+        for (IPullToRefreshListener pullToRefreshListener : mPullToRefreshContainer.mPullToRefreshListeners) {
+            pullToRefreshListener.onFinishHeaderRefresh();
+        }
+        if (mAView != null) {
+            boolean springBack = mScrollerController.springBack(0, mAView.getViewTranslationY(), 0, 0, 0, 0);
+            mTouchHelper.notifyTouchModeChanged(OVER_FLING_HEADER);
+            mAView.getView().invalidate();
+        }
     }
 
     void finishFooterRefresh() {
@@ -58,11 +78,12 @@ public final class HeaderFooterController {
         float fraction = currentHeight / mParams.headerTriggerRefreshHeight;
         fraction = Math.abs(fraction);
         mHeaderContainer.getLayoutParams().height = (int) currentHeight;
+        LogUtil.e("requestLayout");
         mHeaderContainer.requestLayout();
 
         mHeaderView.onPulling(fraction);
 
-        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshListeners) {
+        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshContainer.mPullToRefreshListeners) {
             iPullToRefreshListener.onPullingHeader(fraction, currentHeight);
         }
     }
@@ -79,7 +100,7 @@ public final class HeaderFooterController {
 
         mFooterView.onPulling(fraction);
 
-        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshListeners) {
+        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshContainer.mPullToRefreshListeners) {
             iPullToRefreshListener.onPullingFooter(fraction, currentHeight);
         }
     }
@@ -94,7 +115,7 @@ public final class HeaderFooterController {
             mHeaderView.onPulling(fraction);
         }
 
-        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshListeners) {
+        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshContainer.mPullToRefreshListeners) {
             iPullToRefreshListener.onPullingHeader(fraction, currentHeight);
         }
     }
@@ -109,7 +130,7 @@ public final class HeaderFooterController {
             mFooterView.onPulling(fraction);
         }
 
-        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshListeners) {
+        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshContainer.mPullToRefreshListeners) {
             iPullToRefreshListener.onPullingFooter(fraction, currentHeight);
         }
     }
@@ -119,7 +140,7 @@ public final class HeaderFooterController {
             mHeaderView.onRefresh(mParams.headerPullMaxHeight, mAView.getViewTranslationY());
         }
 
-        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshListeners) {
+        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshContainer.mPullToRefreshListeners) {
             iPullToRefreshListener.onHeaderRefresh();
         }
     }
@@ -129,7 +150,7 @@ public final class HeaderFooterController {
             mFooterView.onRefresh(mParams.footerPullMaxHeight, mAView.getViewTranslationY());
         }
 
-        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshListeners) {
+        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshContainer.mPullToRefreshListeners) {
             iPullToRefreshListener.onFooterRefresh();
         }
     }

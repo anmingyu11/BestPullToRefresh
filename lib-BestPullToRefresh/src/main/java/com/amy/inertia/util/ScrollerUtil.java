@@ -18,6 +18,10 @@ public class ScrollerUtil {
         sViscousFluidNormalize = 1.0f / viscousFluid(1.0f);
     }
 
+    public static boolean isChildCanScroll(View v) {
+        return ViewCompat.canScrollVertically(v, 1) && ViewCompat.canScrollVertically(v, -1);
+    }
+
     /**
      * Replace interpolator viscousInterpolator.
      *

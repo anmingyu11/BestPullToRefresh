@@ -100,6 +100,10 @@ final class AViewTouchEventHandler {
         final int actionIndex = e.getActionIndex();
         final int pointerId = e.getPointerId(actionIndex);
 
+        if (mTouchHelper.CurrentTouchMode == TouchHelper.UNUSED) {
+            mTouchHelper.notifyTouchModeChanged(IDLE);
+        }
+
         switch (action) {
             default: {
                 return mAView.processTouchEvent(e);
@@ -178,12 +182,19 @@ final class AViewTouchEventHandler {
             }
             case IDLE: {
                 //To process when the view is first load, or in the origin position, top or bottom.
-                if (mTouchHelper.touchDY < 0 && ScrollerUtil.isChildScrollToBottom(v)) {
+                final int touchDY = mTouchHelper.touchDY;
+                if (touchDY < 0 && ScrollerUtil.isChildScrollToBottom(v)) {
                     //This is finger scroll up
                     mTouchHelper.notifyTouchModeChanged(OVER_SCROLL_FOOTER);
-                } else if (mTouchHelper.touchDY > 0 && ScrollerUtil.isChildScrollToTop(v)) {
+                } else if (touchDY > 0 && ScrollerUtil.isChildScrollToTop(v)) {
                     //This is finger scroll down
                     mTouchHelper.notifyTouchModeChanged(OVER_SCROLL_HEADER);
+                } else if (touchDY != 0 && !ScrollerUtil.isChildCanScroll(v)) {
+                    if (touchDY > 0) {
+                        mTouchHelper.notifyTouchModeChanged(HEADER_REFRESHING);
+                    } else if (touchDY < 0) {
+                        mTouchHelper.notifyTouchModeChanged(FOOTER_REFRESHING);
+                    }
                 }
                 break;
             }
@@ -264,9 +275,18 @@ final class AViewTouchEventHandler {
                 //Todo anim to
                 final int transY = mAView.getViewTranslationY();
                 LogUtil.d("transY : " + transY);
-                boolean springBack = mScrollerController.springBack(0, transY, 0, 0, 0, 0);
+                boolean springBack = false;
+                int triggerHeight = mParams.headerTriggerRefreshHeight;
+                if (transY > triggerHeight) {
+                    springBack = mScrollerController.springBack(0, transY, 0, 0, triggerHeight, triggerHeight);
+                } else {
+                    springBack = mScrollerController.springBack(0, transY, 0, 0, 0, 0);
+                }
                 mTouchHelper.notifyTouchModeChanged(OVER_FLING_HEADER);
                 mAView.getView().invalidate();
+                if (!springBack) {
+                    mAView.setViewTranslationY(0);
+                }
                 LogUtil.d("spring back : " + springBack);
                 break;
             }

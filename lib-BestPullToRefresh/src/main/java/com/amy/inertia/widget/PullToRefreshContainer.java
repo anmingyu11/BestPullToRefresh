@@ -12,6 +12,9 @@ import com.amy.inertia.interfaces.IPullToRefreshListener;
 import com.amy.inertia.interfaces.OnTouchModeChangeListener;
 import com.amy.inertia.util.LogUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.amy.inertia.widget.TouchHelper.OVER_FLING_FOOTER;
 import static com.amy.inertia.widget.TouchHelper.OVER_FLING_HEADER;
 
@@ -94,7 +97,10 @@ public class PullToRefreshContainer extends FrameLayout {
         mTouchHelper = new TouchHelper(mAView);
         mScrollerController = new AScrollerController(mContext, mTouchHelper, mAView, mParams);
         mTouchEventHandler = new AViewTouchEventHandler(mAView, mScrollerController, mParams, mTouchHelper, mOverScrollHelper);
-        mHeaderFooterController = new HeaderFooterController(mHeaderContainer, mFooterContainer, mHeaderView, mFooterView, mParams, mAView);
+        mHeaderFooterController = new HeaderFooterController(this, mHeaderContainer, mFooterContainer,
+                mHeaderView, mFooterView,
+                mParams, mAView,
+                mTouchHelper, mScrollerController);
 
         mAView.attachToParent(this);
         mTouchHelper.addScrollDetectorListener(new OnTouchModeChangeListener() {
@@ -169,20 +175,40 @@ public class PullToRefreshContainer extends FrameLayout {
         mFooterView = iFooterView;
     }
 
+    final List<IPullToRefreshListener> mPullToRefreshListeners = new ArrayList<IPullToRefreshListener>();
+
     public boolean addIPullListener(IPullToRefreshListener iPullToRefreshListener) {
-        return mHeaderFooterController.mPullToRefreshListeners.add(iPullToRefreshListener);
+        return mPullToRefreshListeners.add(iPullToRefreshListener);
     }
 
     public boolean removeIPullListener(IPullToRefreshListener iPullToRefreshListener) {
-        return mHeaderFooterController.mPullToRefreshListeners.remove(iPullToRefreshListener);
+        return mPullToRefreshListeners.remove(iPullToRefreshListener);
     }
 
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
+    public void finishRefresh8ing() {
+        mHeaderFooterController.finishHeaderRefresh();
     }
 
-    public void updateHeader(){
-       mAView.realSetTranslationY(mHeaderContainer.getLayoutParams().height);
+    public void headerRefresh() {
+        if (mHeaderView != null) {
+            mHeaderView.onRefresh(mParams.headerPullMaxHeight, mAView.getViewTranslationY());
+        }
+
+        for (IPullToRefreshListener iPullToRefreshListener : mPullToRefreshListeners) {
+            iPullToRefreshListener.onHeaderRefresh();
+        }
+    }
+
+    public void setHeaderRefreshing(boolean refreshing) {
+        mHeaderFooterController.isHeaderRefreshing = refreshing;
+    }
+
+    public boolean isHeaderRefreshing() {
+        return mHeaderFooterController.isHeaderRefreshing;
+    }
+
+    public void updateHeader() {
+        final int height = mHeaderContainer.getLayoutParams().height;
+        mAView.realSetTranslationY(height);
     }
 }

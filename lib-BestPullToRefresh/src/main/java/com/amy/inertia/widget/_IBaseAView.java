@@ -9,6 +9,8 @@ interface _IBaseAView {
 
     void attachToParent(PullToRefreshContainer container);
 
+    void notifyHeaderRefreshing();
+
     boolean canViewScrollVertical();
 
     boolean canViewScrollHorizontal();

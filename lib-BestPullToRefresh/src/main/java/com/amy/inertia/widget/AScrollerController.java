@@ -88,16 +88,21 @@ final class AScrollerController {
         //Todo this is not correct in fling.
         //Give a idle state when this finished
         if (computeScrollResult) {
+            if (state == SPRING_BACK && !time) {
+                mScroller.abortAnimation();
+                mAView.notifyHeaderRefreshing();
+                return false;
+            }
             return true;
         } else {
             mScroller.abortAnimation();
-            if (state != FLING) {
+            if (state == OVER_FLING) {
                 //Not Fling
                 mAView.setViewTranslationY(0);
                 mTouchHelper.notifyTouchModeChanged(IDLE);
-            } else {
-                //if is fling
-                mTouchHelper.notifyTouchModeChanged(SETTLING_IN_CONTENT);
+            } else if (state == FLING) {
+                //If is fling
+                mTouchHelper.notifyTouchModeChanged(IDLE);
             }
             return false;
         }

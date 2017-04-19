@@ -201,7 +201,7 @@ final class TouchHelper {
 
     boolean notifyTouchModeChanged(int newTouchMode) {
         LogUtil.w("newTouchMode : " + TOUCH_MODES[newTouchMode]);
-        //LogUtil.printTraceStack("");
+        LogUtil.printTraceStack("");
         //First time .
         if (CurrentTouchMode == UNUSED) {
             setTouchMode(IDLE);

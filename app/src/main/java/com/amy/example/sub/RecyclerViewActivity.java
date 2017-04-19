@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.amy.example.R;
 import com.amy.example.header.TopLoadingRefreshView;
+import com.amy.inertia.interfaces.PullListenerAdapter;
 import com.amy.inertia.widget.ARecyclerView;
 import com.amy.inertia.widget.PullToRefreshContainer;
 
@@ -29,8 +30,6 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
     private Context mContext;
 
-    private Handler mHandler = new Handler();
-
     private List<String> mStrings = new ArrayList<String>();
 
     @Override
@@ -39,7 +38,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
         mContext = this;
         setContentView(R.layout.recycler_view_layout);
         setTitle("RecyclerView");
-
+        initRecyclerView();
         /*PullToRefreshLayout pullToRefreshLayout = (PullToRefreshLayout) findViewById(R.id.pull_to_refresh);
         pullToRefreshLayout.setEnableHeaderPullToRefresh(true);
         pullToRefreshLayout.addOnPullListener("sample", new PullListenerAdapter() {
@@ -65,8 +64,14 @@ public class RecyclerViewActivity extends AppCompatActivity {
                 }, 2000);
             }
         });*/
-        initRecyclerView();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    Handler mHandler = new Handler();
 
     private void initRecyclerView() {
         for (int i = 0; i < 20; i++) {
@@ -75,6 +80,20 @@ public class RecyclerViewActivity extends AppCompatActivity {
         mPullToRefreshContainer = (PullToRefreshContainer) findViewById(R.id.container);
         final TopLoadingRefreshView headerView = new TopLoadingRefreshView(this, mPullToRefreshContainer);
         mPullToRefreshContainer.setHeaderView(headerView);
+        mPullToRefreshContainer.addIPullListener(new PullListenerAdapter() {
+            @Override
+            public void onHeaderRefresh() {
+                super.onHeaderRefresh();
+                mPullToRefreshContainer.setHeaderRefreshing(true);
+
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPullToRefreshContainer.finishRefresh8ing();
+                    }
+                }, 2000);
+            }
+        });
 
         mRecyclerView = (ARecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));

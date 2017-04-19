@@ -190,6 +190,12 @@ public class ARecyclerView extends RecyclerView implements
     }
 
     @Override
+    public void notifyHeaderRefreshing() {
+        LogUtil.d("notifyHeaderRefreshing");
+        mPullToRefreshContainer.headerRefresh();
+    }
+
+    @Override
     public boolean canViewScrollVertical() {
         return computeVerticalScrollRange() > computeVerticalScrollExtent();
     }
@@ -208,6 +214,9 @@ public class ARecyclerView extends RecyclerView implements
     public void setViewTranslationY(int translationY) {
         LogUtil.d("translationY : " + translationY);
         int transY = 0;
+       /* if (translationY != 0 && mTouchHelper.isInOverFling() || mTouchHelper.isInOverScroll()) {
+            transY = translationY;
+        } else */
         if (translationY > 0 && getViewTranslationY() < 0) {
             transY = 0;
         } else if (translationY < 0 && getViewTranslationY() > 0) {
@@ -236,6 +245,7 @@ public class ARecyclerView extends RecyclerView implements
     }
 
     private void pulling(int transY) {
+        LogUtil.d("transY : " + transY);
         if (transY > 0) {
             mHeaderFooterController.pullingHeader(transY);
         } else if (transY < 0) {
